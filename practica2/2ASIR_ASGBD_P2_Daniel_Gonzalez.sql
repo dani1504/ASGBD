@@ -230,7 +230,24 @@ USE tienda_informatica;
 Consulta 1: Muestra el nombre y el precio de aquellos artículos que sean, exactamente, el
 artículo más caro de su respectivo fabricante.
 */
+SELECT nombre, precio
+FROM articulos
+WHERE precio IN (SELECT MAX(precio)
+					FROM articulos
+					GROUP BY fabricante_id);
+/*
+Una consulta con subconsulta buscando el precio maximo de los articulos agrupados por fabricantes.
+*/
+/*
+Muestra el nombre de los fabricantes que no tienen ningún artículo con un precio
+inferior o igual a la media general de precios de toda la tienda.
+*/
 
+SELECT nombre
+FROM fabricantes;
+
+SELECT *
+FROM articulos;
 
 -- Batería de Consultas 2:
 /*
