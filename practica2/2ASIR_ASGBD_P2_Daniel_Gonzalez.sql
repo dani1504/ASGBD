@@ -303,3 +303,93 @@ ORDER BY coste_reparacion DESC;
 Consulta 5: Muestra el nombre de aquellos técnicos que no han realizado ninguna reparación,
 utilizando obligatoriamente un cruce externo de tablas.
 */
+SELECT *
+FROM tecnicos;
+-- Primero insertamos un tecnico que no hayan realizado ninguna reparación
+INSERT INTO tecnicos (id, nombre, salario) VALUES
+(5, 'Daniel Gonzalez', 1500);
+
+SELECT t.nombre, r.descripcion_averia
+FROM tecnicos t
+LEFT JOIN reparaciones r ON t.id = r.tecnico_id
+WHERE r.tecnico_id IS NULL;
+-- Esta consulta vemos que nos muestra toda la tabla de tecnicos relacionada con la de reparaciones pero
+-- como queremos que solo se muestre los que no hayan realizado ninguna reparacion hay que filtrar con IS NULL.
+
+/*
+Consulta 6: Muestra el nombre del técnico y la suma total del dinero recaudado con sus
+reparaciones, filtrando únicamente aquellos técnicos cuya recaudación total supere
+los 100.00 euros.
+*/
+SELECT *
+FROM reparaciones;
+
+SELECT t.nombre, SUM(r.coste_reparacion)
+FROM tecnicos t
+INNER JOIN reparaciones r ON t.id = r.tecnico_id
+GROUP BY t.nombre
+HAVING SUM(r.coste_reparacion) > 100.00;
+
+/*
+Lo que hay que hacer en esta consulta es hacer una suma a coste_reparacion para ver
+el total del dinero recaudado. Agrupar por tecnicos y hacer un filtro con HAVING,
+para que nos muestre solo los que han recaudado mas de 100 euros.
+*/
+
+/*
+Consulta 7: Muestra el nombre de los artículos y el nombre de su respectivo fabricante, pero
+filtrando exclusivamente aquellos artículos cuyos fabricantes sean originarios de
+'Estados Unidos' o 'Taiwán'.
+*/
+SELECT *
+FROM fabricantes;
+
+SELECT *
+FROM articulos;
+
+SELECT a.nombre AS articulo, f.nombre AS fabricante
+FROM articulos a 
+INNER JOIN fabricantes f ON a.fabricante_id = f.id
+WHERE f.pais LIKE UPPER('Estados Unidos') OR f.pais LIKE UPPER('Taiwán');
+-- En este caso hacemos el JOIN filtrando el pais ya que pide que los fabricantes originarios
+-- deben ser estados unidos o taiwan.
+
+/*
+Consulta 8: Muestra el nombre de todos los técnicos y, al lado, el número total de reparaciones
+que ha realizado cada uno de ellos.
+*/
+
+SELECT t.nombre, COUNT(r.id)
+FROM tecnicos t
+INNER JOIN reparaciones r ON t.id = r.tecnico_id
+GROUP BY t.nombre;
+
+-- COUNT para contar las filas asi sabemos cuantas reparaciones a hecho ese tecnico. Agrupamos,
+-- ya que nos piden cada uno de ellos.
+
+/*
+Consulta 9: Muestra el nombre del fabricante y el número total de artículos que produce, pero
+solo de aquellos fabricantes que tengan un número de artículos mayor o igual a 2.
+*/
+
+SELECT f.nombre, COUNT(a.id)
+FROM fabricantes f
+INNER JOIN articulos a ON f.id = a.fabricante_id
+GROUP BY f.nombre
+HAVING COUNT(a.id) >= 2;
+-- Hacemos filtro con HAVING de que el número de artículos tiene que ser mayor o igual a 2,
+-- y agrupamos por fabricantes.
+
+/*
+Consultas 10: Muestra el nombre del técnico, su especialidad y la descripción de la reparación más
+costosa que ha realizado cada uno de ellos.
+*/
+SELECT *
+FROM reparaciones;
+
+SELECT t.nombre, t.especialidad, MAX(coste_reparacion)
+FROM tecnicos t
+INNER JOIN reparaciones r ON t.id = r.tecnico_id
+GROUP BY t.id;
+
+-- MAX coje el valor maximo en esa colunma para cada grupo, en este caso para cada uno de los tecnicos
