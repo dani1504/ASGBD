@@ -222,3 +222,84 @@ FROM tecnicos
 WHERE id IN (SELECT tecnico_id
 				FROM reparaciones
 				WHERE tecnico_id IS NULL);
+                
+-- PARTE 2: CONSULTAS
+-- Batería de Consultas 1:
+USE tienda_informatica;
+/*
+Consulta 1: Muestra el nombre y el precio de aquellos artículos que sean, exactamente, el
+artículo más caro de su respectivo fabricante.
+*/
+
+
+-- Batería de Consultas 2:
+/*
+Consulta 1: Muestra el nombre de cada artículo junto con el nombre de su fabricante, pero
+únicamente para aquellos artículos cuyo precio sea superior a 100.00 euros.
+*/
+
+SELECT a.nombre, f.nombre
+FROM articulos a
+INNER JOIN fabricantes f ON f.id = a.fabricante_id
+WHERE precio > 100.00;
+
+/* 
+Tenemos que hacer un inner join ya que nos dicen que tenemos que mostrar cada artículo con su
+fabricante, además un where para que muestre solamente los superiores a 100 euros.
+*/
+SELECT *
+FROM articulos;
+
+/*
+Consulta 2: Muestra el nombre de todos los fabricantes de la base de datos y, al lado, el nombre
+de sus artículos. Asegúrate de que aparezcan los fabricantes que no tienen ningún
+artículo registrado.
+*/
+
+SELECT f.nombre AS fabricante, a.nombre AS articulo
+FROM fabricantes f
+LEFT JOIN articulos a ON f.id = a.fabricante_id;
+
+INSERT INTO fabricantes (id, nombre) VALUES 
+(9, 'Apple');
+
+SELECT nombre
+FROM fabricantes;
+
+/*
+Tenemos que hacer un LEFT JOIN ya que nos piden todos lo fabricantes aunque no tengan ningún
+artículo registrado. Eso es lo que hace el LEFT JOIN, muestra hasta lo que no tienen nada en
+común con la tabla artículos.
+*/
+
+/*
+Consulta 3: Muestra el nombre del fabricante y la media de los precios de sus artículos, 
+pero solo para aquellos fabricantes cuya media de precios supere los 150.00 euros.
+*/
+
+SELECT f.nombre, ROUND(AVG(a.precio), 2)
+FROM fabricantes f
+INNER JOIN articulos a ON f.id = a.fabricante_id
+GROUP BY f.nombre
+HAVING AVG(a.precio) > 150.00;
+
+/*
+Tenemos que agrupar por nombre de fabricantes para 
+*/
+
+/*
+Consulta 4: Muestra la descripción de la avería, el coste de la reparación y el nombre del 
+técnico que la ha llevado a cabo, ordenado por el coste de mayor a menor.
+*/
+
+SELECT descripcion_averia, coste_reparacion, t.nombre
+FROM reparaciones r
+INNER JOIN tecnicos t ON r.tecnico_id = t.id
+ORDER BY coste_reparacion DESC;
+-- Hacemos un inner join porque no queremos que nos muestre una reparacion que no tenga asignado
+-- ningun tecnico y un order by para ordenar de mayor a menor.
+
+/*
+Consulta 5: Muestra el nombre de aquellos técnicos que no han realizado ninguna reparación,
+utilizando obligatoriamente un cruce externo de tablas.
+*/
