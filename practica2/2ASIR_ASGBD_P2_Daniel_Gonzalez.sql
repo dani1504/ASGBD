@@ -236,18 +236,105 @@ WHERE precio IN (SELECT MAX(precio)
 					FROM articulos
 					GROUP BY fabricante_id);
 /*
-Una consulta con subconsulta buscando el precio maximo de los articulos agrupados por fabricantes.
+Una consulta con una subconsulta buscando el precio maximo de los articulos de cada fabricante.
 */
 /*
-Muestra el nombre de los fabricantes que no tienen ningún artículo con un precio
+Consulta 2: Muestra el nombre de los fabricantes que no tienen ningún artículo con un precio
 inferior o igual a la media general de precios de toda la tienda.
 */
 
-SELECT nombre
+SELECT *
 FROM fabricantes;
 
 SELECT *
 FROM articulos;
+
+SELECT nombre
+FROM fabricantes
+WHERE id NOT IN (SELECT fabricante_id
+			     FROM articulos
+		         WHERE precio <= (SELECT AVG(precio)
+								  FROM articulos)
+				 GROUP BY fabricante_id);
+/*
+Para esta consulta lo que he hecho ha sido una subconsulta para saber que ids de fabricantes tienen un articulo
+con un precio menor o igual a la media de toda la tienda. Una vez sabiendo los que SI tienen un articulo 
+puedo saber el nombre de los que NO tienen un articulo inferior o igual a la media y por eso he usado NOT IN.
+*/
+
+/*
+Consulta 3: Muestra la descripción y el coste de aquellas reparaciones cuyo coste sea
+estrictamente superior a la media de las reparaciones realizadas por su propio técnico.
+*/
+select *
+from reparaciones;
+
+SELECT descripcion_averia, coste_reparacion
+FROM reparaciones 
+WHERE coste_reparacion > (SELECT ROUND(AVG(coste_reparacion),2)
+								FROM reparaciones
+								GROUP BY tecnico_id);
+
+
+/*
+Consulta 4: Muestra el identificador y la especialidad de los técnicos cuya suma total del coste de
+las reparaciones que han realizado supere el doble de su propio salario.
+*/
+
+SELECT id, especialidad
+FROM tecnicos
+WHERE (salario * 2) > (SELECT SUM(coste_reparacion)
+							FROM reparaciones
+							GROUP BY tecnico_id);
+                            
+/*
+Consulta 5: Muestra el nombre del fabricante (o fabricantes) que posee el mayor número de
+artículos registrados en la base de datos.
+*/
+SELECT nombre
+FROM fabricantes
+WHERE id IN (SELECT fabricante_id
+			 FROM articulos
+             GROUP BY fabricante_id
+             HAVING MAX() IN (SELECT COUNT(id)
+								FROM articulos
+								GROUP BY fabricante_id));
+                    
+SELECT *
+FROM articulos;
+
+/*
+Consulta 6: Muestra el nombre de los técnicos que han realizado alguna reparación, pero que
+nunca han realizado ninguna reparación cuyo coste haya superado los 100.00 euros.
+*/
+
+SELECT nombre
+FROM tecnicos
+WHERE id IN (SELECT tecnico_id
+				FROM reparaciones
+				WHERE tecnico_id NOT IN (SELECT tecnico_id
+											FROM reparaciones
+                                            WHERE coste_reparacion > 100.00));
+
+SELECT *
+FROM reparaciones;
+/*
+He hecho una subconsulta para que me muestre los id de los tecnicos que hayan superado alguna vez los 100 euros en una reparacion.
+Luego con un where y NOT IN para que me muestre los que nunca hayan superado una reparacion que haya costado 100 euros. 
+Y luego uso IN para que me de los id de los que nunca han superado 100 euros y con el id ya puede mostrar el nombre de los tecnicos.
+*/
+
+/*
+Consulta 7: Muestra el nombre y el salario de los técnicos cuyo salario sea inferior a la media
+salarial de su propia especialidad.
+*/
+
+SELECT nombre, salario
+FROM tecnicos
+WHERE salario < (SELECT ROUND(AVG(salario),2)
+					FROM tecnicos
+					GROUP BY especialidad)
+
 
 -- Batería de Consultas 2:
 /*
