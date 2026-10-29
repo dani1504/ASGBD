@@ -270,9 +270,10 @@ select *
 from reparaciones;
 
 SELECT descripcion_averia, coste_reparacion
-FROM reparaciones 
+FROM reparaciones r1
 WHERE coste_reparacion > (SELECT ROUND(AVG(coste_reparacion),2)
-								FROM reparaciones
+								FROM reparaciones r2
+                                WHERE r1.tecnico_id = r2.tecnico_id
 								GROUP BY tecnico_id);
 
 
@@ -282,11 +283,19 @@ las reparaciones que han realizado supere el doble de su propio salario.
 */
 
 SELECT id, especialidad
-FROM tecnicos
-WHERE (salario * 2) > (SELECT SUM(coste_reparacion)
-							FROM reparaciones
-							GROUP BY tecnico_id);
-                            
+FROM tecnicos t
+WHERE (salario * 2) < (SELECT SUM(coste_reparacion)
+							FROM reparaciones r
+                            WHERE t.id = r.tecnico_id
+                            GROUP BY tecnico_id);
+   
+SELECT *
+FROM tecnicos;
+
+INSERT INTO reparaciones (id, descripcion_averia, coste_reparacion, tecnico_id) VALUES
+(15, 'Servidor estropeado', 4000, 2);
+
+
 /*
 Consulta 5: Muestra el nombre del fabricante (o fabricantes) que posee el mayor número de
 artículos registrados en la base de datos.
@@ -294,8 +303,7 @@ artículos registrados en la base de datos.
 SELECT nombre
 FROM fabricantes
 WHERE id IN (SELECT fabricante_id
-			 FROM articulos
-             GROUP BY fabricante_id
+			 FROM 
              HAVING MAX() IN (SELECT COUNT(id)
 								FROM articulos
 								GROUP BY fabricante_id));
@@ -310,11 +318,9 @@ nunca han realizado ninguna reparación cuyo coste haya superado los 100.00 euro
 
 SELECT nombre
 FROM tecnicos
-WHERE id IN (SELECT tecnico_id
-				FROM reparaciones
-				WHERE tecnico_id NOT IN (SELECT tecnico_id
-											FROM reparaciones
-                                            WHERE coste_reparacion > 100.00));
+WHERE id NOT IN (SELECT tecnico_id
+				 FROM reparaciones
+				 WHERE coste_reparacion > 100.00);
 
 SELECT *
 FROM reparaciones;
@@ -333,8 +339,43 @@ SELECT nombre, salario
 FROM tecnicos
 WHERE salario < (SELECT ROUND(AVG(salario),2)
 					FROM tecnicos
-					GROUP BY especialidad)
+					GROUP BY especialidad);
+                    
+                    
+                    
 
+SELECT nombre, salario
+FROM tecnicos t
+WHERE salario < (SELECT AVG(salario)
+					FROM tecnicos
+					WHERE especialidad = t.especialidad
+                    GROUP BY especialidad);
+                    
+SELECT *
+FROM tecnicos;
+
+/*
+Consulta 8: Muestra el nombre de los fabricantes cuyo país coincide con el país del fabricante
+que produce el artículo más caro de toda la tienda.
+*/
+
+SELECT nombre
+FROM fabricantes 
+WHERE pais = (SELECT pais
+				FROM fabricantes
+				WHERE id = (SELECT fabricante_id
+								FROM articulos 
+								WHERE precio = (SELECT MAX(precio)
+												FROM articulos)));
+	
+/*
+Consulta 9: 
+*/
+
+
+/*
+Consulta 10:
+*/
 
 -- Batería de Consultas 2:
 /*
@@ -346,6 +387,9 @@ SELECT a.nombre, f.nombre
 FROM articulos a
 INNER JOIN fabricantes f ON f.id = a.fabricante_id
 WHERE precio > 100.00;
+
+SELECT *
+FROM tecnicos;
 
 /* 
 Tenemos que hacer un inner join ya que nos dicen que tenemos que mostrar cada artículo con su
@@ -440,6 +484,8 @@ el total del dinero recaudado. Agrupar por tecnicos y hacer un filtro con HAVING
 para que nos muestre solo los que han recaudado mas de 100 euros.
 */
 
+
+
 /*
 Consulta 7: Muestra el nombre de los artículos y el nombre de su respectivo fabricante, pero
 filtrando exclusivamente aquellos artículos cuyos fabricantes sean originarios de
@@ -497,3 +543,22 @@ INNER JOIN reparaciones r ON t.id = r.tecnico_id
 GROUP BY t.id;
 
 -- MAX coje el valor maximo en esa colunma para cada grupo, en este caso para cada uno de los tecnicos
+
+-- PERMISOS (para mostar los permisos, asignar permisos.)
+SHOW GRANTS FOR 'root'@'localhost';
+
+-- MODIFICAR (credenciales, bloqueo de cuentas)
+ALTER USER ;
+-- '%'. Para que se aplique a todo 
+
+-- CREAR 
+CREATE USER 'alejandro'@'localhost' identified by 'Daniel2026';
+
+-- Resfrescar 
+FLUSH PRIVILEGES
+
+-- Eliminar usuarios
+DROP USER ;
+
+-- Retirar permisos un privilegio específico
+REVOKE UPDATE  ;
