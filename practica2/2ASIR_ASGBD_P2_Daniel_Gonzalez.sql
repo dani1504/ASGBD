@@ -219,9 +219,9 @@ reparación.
 */
 SELECT nombre
 FROM tecnicos
-WHERE id IN (SELECT tecnico_id
+WHERE id NOT IN (SELECT tecnico_id
 				FROM reparaciones
-				WHERE tecnico_id IS NULL);
+				WHERE tecnico_id);
                 
 -- PARTE 2: CONSULTAS
 -- Batería de Consultas 1:
@@ -231,10 +231,10 @@ Consulta 1: Muestra el nombre y el precio de aquellos artículos que sean, exact
 artículo más caro de su respectivo fabricante.
 */
 SELECT nombre, precio
-FROM articulos
-WHERE precio IN (SELECT MAX(precio)
-					FROM articulos
-					GROUP BY fabricante_id);
+FROM articulos a1
+WHERE precio = (SELECT MAX(precio)
+					FROM articulos a2
+                    WHERE a1.fabricante_id = a2.fabricante_id);
 /*
 Una consulta con una subconsulta buscando el precio maximo de los articulos de cada fabricante.
 */
