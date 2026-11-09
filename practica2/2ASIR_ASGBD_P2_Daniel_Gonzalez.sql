@@ -275,7 +275,11 @@ WHERE coste_reparacion > (SELECT ROUND(AVG(coste_reparacion),2)
 								FROM reparaciones r2
                                 WHERE r1.tecnico_id = r2.tecnico_id
 								GROUP BY tecnico_id);
-
+/*
+En esta consulta lo que he hecho ha sido hacer una subconsulta correlacionada, es decir, estas subconsultas 
+hacen referencia a columnas de la tabla externa, en este caso a reparaciones r1. La subconsulta calcula la 
+media de los costes por cada técnico, filtrando a los técnicos que superan la media.
+*/
 
 /*
 Consulta 4: Muestra el identificador y la especialidad de los técnicos cuya suma total del coste de
@@ -293,23 +297,56 @@ SELECT *
 FROM tecnicos;
 
 INSERT INTO reparaciones (id, descripcion_averia, coste_reparacion, tecnico_id) VALUES
-(15, 'Servidor estropeado', 4000, 2);
+(16, 'Caída de servidores', 9000, 4);
 
+/*
+En esta consulta lo que he hecho ha sido hacer una subconsulta correlacionada, es decir, estas subconsultas 
+hacen referencia a columnas de la tabla externa, en este caso a tecnicos t. La subconsulta calcula la 
+suma de los costes por cada técnico, filtrando al técnico que la suma del coste de las reparaciones que ha
+relizado supere al doble de su salario. En este caso, no había ningún técnico que cumpliera esa condición
+así que lo que hice fue insertar a la tabla reparaciones una reparación con un coste alto.
+*/
 
 /*
 Consulta 5: Muestra el nombre del fabricante (o fabricantes) que posee el mayor número de
 artículos registrados en la base de datos.
 */
+
+SELECT * FROM fabricantes;
+select * from articulos;
+-- suma de los articulos totales por cada fabricante_id
+SELECT SUM(id) AS articulos_totales, fabricante_id
+FROM articulos
+GROUP BY fabricante_id;
+-- seleccionar el fabricante_id con mayor numero de articulos registrados
+SELECT MAX(articulos_totales)
+FROM (SELECT SUM(id) AS articulos_totales, fabricante_id
+		FROM articulos
+		GROUP BY fabricante_id) AS tabla_max;
+-- Hacemos un filtro con having para saber el fabricante
+SELECT fabricante_id
+FROM articulos
+GROUP BY fabricante_id
+HAVING SUM(id) IN (SELECT MAX(articulos_totales)
+					FROM (SELECT SUM(id) AS articulos_totales, fabricante_id
+							FROM articulos
+							GROUP BY fabricante_id) AS tabla_max);
+-- Para mostrar el nombre del fabricante hay que relacionarla con la tabla fabricantes pero como no hay join:
 SELECT nombre
 FROM fabricantes
 WHERE id IN (SELECT fabricante_id
-			 FROM 
-             HAVING MAX() IN (SELECT COUNT(id)
-								FROM articulos
-								GROUP BY fabricante_id));
-                    
-SELECT *
-FROM articulos;
+			FROM articulos
+			GROUP BY fabricante_id
+			HAVING COUNT(id) IN (SELECT MAX(articulos_totales)
+								FROM (SELECT COUNT(id) AS articulos_totales, fabricante_id
+										FROM articulos
+										GROUP BY fabricante_id) AS tabla_max));
+                                        
+/*
+En esta consulta agrupo los artículos por fabricante para calcular el total de cada uno y sacar el valor máximo en una tabla con
+alias tabla_max. Con el HAVING e IN me quedo con el (o los) ID del fabricante (o fabricantes) que alcanza esa cifra máxima. Por último, 
+en la consulta principal uso ese ID con un IN para mostrar la columna del nombre.
+*/
 
 /*
 Consulta 6: Muestra el nombre de los técnicos que han realizado alguna reparación, pero que
@@ -336,23 +373,29 @@ salarial de su propia especialidad.
 */
 
 SELECT nombre, salario
-FROM tecnicos
-WHERE salario < (SELECT ROUND(AVG(salario),2)
-					FROM tecnicos
-					GROUP BY especialidad);
-                    
-                    
-                    
-
-SELECT nombre, salario
 FROM tecnicos t
 WHERE salario < (SELECT AVG(salario)
 					FROM tecnicos
 					WHERE especialidad = t.especialidad
                     GROUP BY especialidad);
                     
+SELECT AVG(salario)
+FROM tecnicos
+GROUP BY especialidad;
+                  
 SELECT *
 FROM tecnicos;
+
+INSERT INTO tecnicos (id, nombre, especialidad, salario) VALUES
+(7, 'Sergio Gonzalez', 'Movilidad y Tablets', 500);
+
+/*
+En esta consulta lo que he hecho ha sido hacer una subconsulta correlacionada, es decir, estas subconsultas 
+hacen referencia a columnas de la tabla externa, en este caso a tecnicos t. La subconsulta calcula la media
+salarial de la propia especialidad de cada técnico y luego la consulta principal filtra que técnicos tienen
+un salario inferior a la media de su especialidad. En este caso, no había ningún técnico que cumpliera esa 
+condición así que lo que hice fue insertar a la tabla tecnicos un técnico que tuviera un salario muy bajo.
+*/
 
 /*
 Consulta 8: Muestra el nombre de los fabricantes cuyo país coincide con el país del fabricante
@@ -367,14 +410,83 @@ WHERE pais = (SELECT pais
 								FROM articulos 
 								WHERE precio = (SELECT MAX(precio)
 												FROM articulos)));
-	
+
 /*
-Consulta 9: 
+Para esta consulta he ido anidando varios SELECT: primero busco el artículo más caro y saco su fabricante.
+Luego miro de qué país es ese fabricante en concreto, y con ese dato ya filtro en la consulta principal 
+para mostrar el nombre de todos los fabricantes que sean de ese mismo país.
 */
 
+/*
+Consulta 9: Muestra el nombre y el precio del artículo más barato de entre todos los fabricantes
+que son originarios de 'Estados Unidos'.
+*/
+
+SELECT MIN(precio)
+FROM articulos;
+
+SELECT fabricante_id
+FROM articulos
+WHERE precio = (SELECT MIN(precio)
+				FROM articulos);
+
+SELECT id 
+FROM fabricantes
+WHERE pais LIKE UPPER('Estados Unidos');
+
+SELECT MIN(precio)
+FROM articulos
+WHERE fabricante_id IN (SELECT id 
+						FROM fabricantes
+						WHERE pais LIKE UPPER('Estados Unidos'));
+
+SELECT nombre, precio 
+FROM articulos
+WHERE precio = (SELECT MIN(precio)
+				FROM articulos
+				WHERE fabricante_id IN (SELECT id 
+										FROM fabricantes
+										WHERE pais LIKE UPPER('Estados Unidos')));
+                                        
+SELECT * FROM fabricantes;
 
 /*
-Consulta 10:
+Para esta consulta he ido anidando varios SELECT: primero busco que fabricantes son de Estados unidos.
+Luego lo que hago es buscar el articulos más barato filtrando por los fabricantes que son de Estados
+Unidos. Y por último en la consulta principal mostramos el nombre y precio del artículo más barato y
+con orígen Estados Unidos.
+*/
+
+/*
+Consulta 10: Muestra el identificador del técnico (tecnico_id) que ha acumulado el mayor
+coste total en reparaciones.
+*/
+
+SELECT * FROM reparaciones;
+SELECT * FROM tecnicos;
+
+SELECT SUM(coste_reparacion) AS coste_total
+FROM reparaciones 
+GROUP BY tecnico_id;
+
+SELECT MAX(coste_total)
+FROM (SELECT SUM(coste_reparacion) AS coste_total, tecnico_id AS id_tecnico
+		FROM reparaciones 
+		GROUP BY tecnico_id) AS tabla_max;
+
+SELECT tecnico_id
+FROM reparaciones
+GROUP BY tecnico_id
+HAVING SUM(coste_reparacion) = ((SELECT MAX(coste_total)
+								FROM (SELECT SUM(coste_reparacion) AS coste_total, tecnico_id AS id_tecnico
+										FROM reparaciones 
+										GROUP BY tecnico_id) AS tabla_max));
+
+/*
+He agrupado las reparaciones por técnico y mediante HAVING he filtrado para mostrar solo al técnico que 
+la suma del coste de sus reparaciones iguala el coste total máximo. Ese filtro HAVING lo he sacado calculando 
+la suma total del coste de reparaciones de cada técnico y lo he metido dentro de una tabla a la que le he dado 
+un alias tabla_max para poder sacar al coste de reparaciones total más alto.
 */
 
 -- Batería de Consultas 2:
@@ -484,8 +596,6 @@ el total del dinero recaudado. Agrupar por tecnicos y hacer un filtro con HAVING
 para que nos muestre solo los que han recaudado mas de 100 euros.
 */
 
-
-
 /*
 Consulta 7: Muestra el nombre de los artículos y el nombre de su respectivo fabricante, pero
 filtrando exclusivamente aquellos artículos cuyos fabricantes sean originarios de
@@ -543,40 +653,3 @@ INNER JOIN reparaciones r ON t.id = r.tecnico_id
 GROUP BY t.id;
 
 -- MAX coje el valor maximo en esa colunma para cada grupo, en este caso para cada uno de los tecnicos
-
--- PERMISOS (para mostar los permisos, asignar permisos.)
--- 
-SHOW GRANTS FOR 'root'@'localhost'; -- mostrar 
-
-GRANT SELECT ON tienda_informatica.articulos TO 'Dani'@'localhost';
-GRANT INSERT ON tienda_informatica.* TO 'Dani'@'localhost';
-
--- MODIFICAR (credenciales, bloqueo de cuentas)
-ALTER USER CUENTA IDENTIFIED BY 'clave';
-ALTER USER CUENTA ACCOUNT LOCK;
--- '%'. Para que se aplique a todo 
-
--- CREAR 
-CREATE USER 'Dani'@'localhost' identified by 'Daniel2026';
-CREATE ROLE 'rol_analista'; -- Le podemos poner tambien permisos para los roles
--- Resfrescar 
-FLUSH PRIVILEGES;
-
--- Eliminar usuarios
-DROP USER CUENTA;
-
--- Retirar permisos un privilegio específico
-REVOKE UPDATE ON tienda_informatica.articulos FROM CUENTA;
-
-ALTER USER 'soporte'@'%' PASSWORD EXPIRE INTERVAL 30 DAY;
-ALTER USER 'soporte'@'%' CONNECTION_LIMIT 0 PASSWORD EXPIRE;
-SET GLOBAL wait_timeout = 3600; -- Cierra sesiones inactivas tras 1 horas.
-
-/*Una vista es una tabla temporal para poner los resultados que queremos que se vea */
-CREATE VIEW v_tecnicos AS
-SELECT * FROM tecnicos
-WHERE salario > 100
-WITH CHECK OPTION;
-
-CREATE SCHEMA Ventas AUTHORIZATION comercial;
--- Gestión visual de usuario.
