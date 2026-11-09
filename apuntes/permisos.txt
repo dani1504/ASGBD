@@ -1,0 +1,36 @@
+-- PERMISOS (para mostar los permisos, asignar permisos.)
+-- 
+SHOW GRANTS FOR 'root'@'localhost'; -- mostrar 
+
+GRANT SELECT ON tienda_informatica.articulos TO 'Dani'@'localhost';
+GRANT INSERT ON tienda_informatica.* TO 'Dani'@'localhost';
+
+-- MODIFICAR (credenciales, bloqueo de cuentas)
+ALTER USER CUENTA IDENTIFIED BY 'clave';
+ALTER USER CUENTA ACCOUNT LOCK;
+-- '%'. Para que se aplique a todo 
+
+-- CREAR 
+CREATE USER 'Dani'@'localhost' identified by 'Daniel2026';
+CREATE ROLE 'rol_analista'; -- Le podemos poner tambien permisos para los roles
+-- Resfrescar 
+FLUSH PRIVILEGES;
+
+-- Eliminar usuarios
+DROP USER CUENTA;
+
+-- Retirar permisos un privilegio específico
+REVOKE UPDATE ON tienda_informatica.articulos FROM CUENTA;
+
+ALTER USER 'soporte'@'%' PASSWORD EXPIRE INTERVAL 30 DAY;
+ALTER USER 'soporte'@'%' CONNECTION_LIMIT 0 PASSWORD EXPIRE;
+SET GLOBAL wait_timeout = 3600; -- Cierra sesiones inactivas tras 1 horas.
+
+/*Una vista es una tabla temporal para poner los resultados que queremos que se vea */
+CREATE VIEW v_tecnicos AS
+SELECT * FROM tecnicos
+WHERE salario > 100
+WITH CHECK OPTION;
+
+CREATE SCHEMA Ventas AUTHORIZATION comercial;
+-- Gestión visual de usuario.
