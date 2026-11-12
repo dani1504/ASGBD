@@ -42,7 +42,7 @@ SELECT id, nombre, especialidad FROM tecnicos;
 -- 2. Privilegio granular.
 GRANT SELECT ON tienda_informatica.v_tecnicos_activos TO 'gestor_tienda'@'localhost';
 -- 3. Prueba de denegación.
-En el documento viene resuelto este apartado;
+-- En el documento viene resuelto este apartado;
 
 SELECT *
 FROM v_tecnicos_activos;
@@ -69,7 +69,7 @@ FROM v_articulos_gama_baja
 WHERE precio = 5.00;
 
 -- Tarea 5: Auditoría, Resolución de Incidencias y Reflexión Crítica
-En el documento viene resuelto este apartado;
+-- En el documento viene resuelto este apartado;
 -- 1 
 SHOW GRANTS FOR 'auditor_externo'@'%';
 SHOW GRANTS FOR 'rol_consultor';

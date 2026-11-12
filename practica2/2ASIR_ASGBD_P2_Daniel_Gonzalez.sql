@@ -121,6 +121,15 @@ INSERT INTO reparaciones (id, descripcion_averia, coste_reparacion, tecnico_id) 
 SELECT *
 FROM reparaciones;
 
+-- Como se hace un update en las tablas:
+UPDATE nombre_tabla
+SET columna = nuevo_valor
+WHERE condicion;
+
+-- Como se hace un delete:
+DELETE FROM nombre_tabla
+WHERE condicion;
+
 -- PARTE 2: BATERÍA DE CONSULTAS
 /*
 1. Consulta 1: Muestra el nombre y el precio de todos los artículos 
@@ -653,3 +662,26 @@ INNER JOIN reparaciones r ON t.id = r.tecnico_id
 GROUP BY t.id;
 
 -- MAX coje el valor maximo en esa colunma para cada grupo, en este caso para cada uno de los tecnicos
+
+
+-- Muestra el nombre del articulo, su precio y el nombre del fabricante para aquellos
+-- articulos que tienen el precio maxima dentro de su propio fabricante.
+
+USE tienda_informatica;
+
+SELECT *
+FROM articulos;
+
+SELECT *
+FROM fabricantes;
+
+SELECT a.nombre AS nombre_articulo, a.precio, f.nombre AS nombre_fabricante
+FROM articulos a
+INNER JOIN fabricantes f ON a.fabricante_id = f.id
+WHERE precio IN (SELECT MAX(precio)
+					FROM articulos a
+					GROUP BY fabricante_id);
+
+SELECT MAX(precio), fabricante_id
+FROM articulos a
+GROUP BY fabricante_id;
