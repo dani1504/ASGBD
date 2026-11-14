@@ -99,7 +99,7 @@ INSERT INTO `plataforma` VALUES
 	(1, 'PC'), (2, 'PlayStation'), (3, 'Xbox'), (4, 'Mobile'), (5, 'Nintendo');
 
 SELECT *
-FROM plataforma_juego;
+FROM plataforma;
 --
 -- Estructura de la tabla plataforma_juego
 --
@@ -125,7 +125,7 @@ BEGIN
 						FROM genero
 						WHERE nombre_genero LIKE UPPER('MOBA'));
 END $
-
+DELIMITER ;
 CALL NombreJuegoMOBA();
 
 -- Ejercicio 2
@@ -143,6 +143,7 @@ BEGIN
 													FROM desarrollador
 													WHERE nombre_desarrollador LIKE UPPER('SUPERCELL')));
 END $
+DELIMITER ;
 
 CALL NombreJuegoSupercell();
 
@@ -159,26 +160,87 @@ FROM desarrollador;
 -- Crear un procedimiento que obtenga el nombre de los videojuegos y el género de los juegos
 -- publicados en la plataforma ‘PlayStation’
 
-DROP PROCEDURE NombreJuegoPlaystation;
+DROP PROCEDURE IF EXISTS NombreJuegoPlaystation;
 DELIMITER $
 CREATE PROCEDURE NombreJuegoPlaystation()
 BEGIN 
 	SELECT j.nombre_juego, g.nombre_genero
     FROM juego j 
-    INNER JOIN genero g 			  ON j.id_juego = g.id_genero
+    INNER JOIN genero g 			  ON j.id_genero = g.id_genero
     INNER JOIN desarrollador_juego dj ON dj.id_juego = j.id_juego
     INNER JOIN plataforma_juego pj    ON pj.id_desarrollador_juego = dj.id_des_juego
     INNER JOIN plataforma p           ON p.id_plataforma = pj.id_plataforma
     WHERE p.nombre_plataforma LIKE UPPER('PLAYSTATION');
+END $ 
+DELIMITER ;
 
-END $
+CALL NombreJuegoPlaystation;
 
 USE VIDEOJUEGOS;
 
-SELECT j.nombre_juego, g.nombre_genero
-    FROM juego j 
-    INNER JOIN genero g ON j.id_juego = g.id_genero
-    INNER JOIN desarrollador_juego dj ON j.id_juego = dj.id_juego
-    INNER JOIN plataforma_juego pj ON pj.id_desarrollador_juego = dj.id_des_juego
-    INNER JOIN plataforma p ON p.id_plataforma = pj.id_plataforma
-    WHERE nombre_plataforma LIKE UPPER('PLAYSTATION');
+-- Ejercicio 4
+-- Crear un procedimiento que obtenga el número de videojuegos lanzados en el año 2022.
+DROP PROCEDURE IF EXISTS NumeroJuegos2022;
+DELIMITER $
+CREATE PROCEDURE NumeroJuegos2022 ()
+BEGIN
+	SELECT COUNT(DISTINCT dj.id_juego)
+	FROM desarrollador_juego dj
+	INNER JOIN plataforma_juego pj ON pj.id_desarrollador_juego = dj.id_des_juego
+	WHERE pj.anio_lanzamiento = 2022;
+END $
+DELIMITER ;
+CALL NumeroJuegos2022();
+    
+select * from plataforma_juego where anio_lanzamiento = 2022;
+
+-- Ejercicio 5
+-- Crear un procedimiento que obtenga el porcentaje de videojuegos lanzados en 2022 llamando al
+-- ejercicio 4 dentro del procedimiento y utilizando el resultado que devuelve para hacer el cálculo.
+DROP PROCEDURE IF EXISTS PorcentajeJuegos2022;
+DELIMITER $
+CREATE PROCEDURE PorcentajeJuegos2022()
+BEGIN
+	DECLARE numero INT;
+	SET numero = CALL NumeroJuegos2022();
+    
+END $
+DELIMITER ;
+
+CALL PorcentajeJuegos2022();
+
+USE videojuegos;
+
+
+
+DROP PROCEDURE IF EXISTS juegos_2022;
+
+
+
+DELIMITER $
+
+CREATE PROCEDURE juegos_2022()
+
+BEGIN
+
+SELECT COUNT(*)
+
+FROM juego
+
+WHERE id_juego IN (SELECT id_juego
+
+					FROM desarrollador_juego
+
+					WHERE id_des_juego IN (SELECT id_desarrollador_juego
+
+											FROM plataforma_juego
+
+											WHERE anio_lanzamiento = 2022));
+
+END $
+
+DELIMITER ; 
+CALL juegos_2022();
+
+
+
